@@ -11,28 +11,20 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-
     - name: Setup xmake
       uses: xmake-io/github-action-setup-xmake@v1
 
-    - name: Download and Build plugin-sdk
+    - name: Download plugin-sdk
       run: |
         git clone https://github.com/DK22Pac/plugin-sdk.git
         cd plugin-sdk
         git checkout 050d18b6e1770477deab81a40028a40277583d97
-        .\tools\premake\premake5.exe vs2022
-        msbuild plugin-sdk.sln /p:Configuration=Release /p:Platform=Win32
       
-    - name: Create Dummy GTA SA Folder
-      run: mkdir gta_sa
-
     - name: Build CoopAndreas
       env:
         PLUGIN_SDK_DIR: ${{ github.workspace }}\plugin-sdk
-        GTA_SA_DIR: ${{ github.workspace }}\gta_sa
       run: |
+        xmake f -m release -a x86 -p windows
         xmake --build client
         xmake --build server
         xmake --build proxy
@@ -40,7 +32,7 @@ jobs:
     - name: Collect Release Files
       run: |
         mkdir Release
-        copy gta_sa\CoopAndreasSA.dll Release\
+        copy build\windows\x86\release\CoopAndreasSA.dll Release\
         copy build\windows\x86\release\proxy.dll Release\eax.dll
         copy build\windows\x86\release\server.exe Release\
 
@@ -48,4 +40,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: CoopAndreas-Ready-Files
-        path: Release\*
+        path: Release
